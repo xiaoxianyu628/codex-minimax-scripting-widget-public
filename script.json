@@ -1,0 +1,20 @@
+{
+  "name": "Codex + MiniMax 额度",
+  "color": "#5B8DEF",
+  "version": "2.2.0",
+  "description": "在桌面小组件和灵动岛中查看 Codex 与 MiniMax 套餐剩余额度。",
+  "localizedNames": {
+    "zh-Hans": "Codex + MiniMax 额度"
+  },
+  "runInApp": false,
+  "remoteResource": null,
+  "localizedDescriptions": null,
+  "author": {
+    "name": "Buzz Lightyear",
+    "email": null,
+    "homepage": null
+  },
+  "intentInputTypes": [],
+  "contributors": [],
+  "icon": "chart.bar.fill"
+}
