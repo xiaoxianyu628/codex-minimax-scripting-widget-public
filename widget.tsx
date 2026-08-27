@@ -50,6 +50,20 @@ function formatResetCountdown(value: unknown): string {
   return `${Math.ceil(remainingMinutes / 60)}h`
 }
 
+function formatWeeklyCountdown(value: unknown): string {
+  if (!value) return "重置未知"
+  const resetAt = new Date(String(value)).getTime()
+  if (!Number.isFinite(resetAt)) return "重置未知"
+
+  const remainingMinutes = Math.ceil((resetAt - Date.now()) / 60000)
+  if (remainingMinutes <= 0) return "即将重置"
+
+  const totalHours = Math.ceil(remainingMinutes / 60)
+  const days = Math.floor(totalHours / 24)
+  const hours = totalHours % 24
+  return `${days}日${hours}时`
+}
+
 function meterColor(remaining: number, healthyColor: string): string {
   return remaining > 50 ? healthyColor : remaining > 20 ? "#FFD166" : "#FF6B7A"
 }
@@ -175,7 +189,7 @@ async function run() {
           resetText: formatReset(session.resetsAt),
         },
         weekly: {
-          label: "一周",
+          label: formatWeeklyCountdown(weekly.resetsAt),
           remaining: clampPercent(weekly.remainingPercent),
           used: clampPercent(weekly.usedPercent),
           resetText: formatReset(weekly.resetsAt),
