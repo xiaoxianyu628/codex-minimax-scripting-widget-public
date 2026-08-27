@@ -1,12 +1,12 @@
 {
-  "name": "Codex + MiniMax 额度",
+  "name": "AI额度直连版-v6",
   "color": "#5B8DEF",
-  "version": "2.2.0",
-  "description": "在桌面小组件和灵动岛中查看 Codex 与 MiniMax 套餐剩余额度。",
+  "version": "6.0.0",
+  "description": "不依赖 Keychain 的 Codex 与 MiniMax 额度桌面组件。",
   "localizedNames": {
-    "zh-Hans": "Codex + MiniMax 额度"
+    "zh-Hans": "AI额度直连版-v6"
   },
-  "runInApp": false,
+  "runInApp": true,
   "remoteResource": null,
   "localizedDescriptions": null,
   "author": {

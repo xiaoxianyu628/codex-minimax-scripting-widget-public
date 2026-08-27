@@ -1,11 +1,6 @@
-import { HStack, Keychain, ProgressView, Script, Spacer, Text, VStack, Widget } from "scripting"
+import { HStack, ProgressView, Spacer, Text, VStack, Widget } from "scripting"
 
 const HUB = "https://token-monitor-hub.xiaoxianyu628.workers.dev"
-const SECRET_KEY = "token-monitor-secret"
-
-function readSecret(): string {
-  return (Keychain.get(SECRET_KEY) || "").trim()
-}
 
 type QuotaWindowData = {
   label: string
@@ -153,10 +148,9 @@ function ErrorWidget({ message }: { message: string }) {
 
 async function run() {
   try {
-    const secret = readSecret()
-    if (!secret) throw new Error("请先打开脚本，配置访问密钥")
-    const url = `${HUB}/api/stats?secret=${encodeURIComponent(secret)}`
+    const url = `${HUB}/api/public/stats`
     const response = await fetch(url, { timeout: 15 })
+    if (!response.ok) throw new Error(`额度服务器返回 HTTP ${response.status}`)
     const data = await response.json()
     const providers = Array.isArray(data?.limits?.providers)
       ? data.limits.providers
@@ -201,10 +195,4 @@ async function run() {
   }
 }
 
-export { HUB, SECRET_KEY, readSecret }
-
-// This file is also imported by index.tsx. Only execute the widget entrypoint
-// when Scripting is actually rendering a widget.
-if (Script.env === "widget") {
-  run()
-}
+run()
