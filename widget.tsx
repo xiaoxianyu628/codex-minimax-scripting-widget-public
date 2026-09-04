@@ -17,8 +17,8 @@ type ProviderWidgetData = {
 }
 
 type WidgetData = {
-  codex: ProviderWidgetData
-  minimax: ProviderWidgetData
+  codexA: ProviderWidgetData
+  codexB: ProviderWidgetData
 }
 
 function clampPercent(value: unknown): number {
@@ -102,7 +102,7 @@ function ProviderBlock({ data }: { data: ProviderWidgetData }) {
   )
 }
 
-function QuotaWidget({ codex, minimax }: WidgetData) {
+function QuotaWidget({ codexA, codexB }: WidgetData) {
   return (
     <VStack
       alignment="leading"
@@ -131,8 +131,8 @@ function QuotaWidget({ codex, minimax }: WidgetData) {
         <Text font={10} foregroundStyle="#62E6B3">● LIVE</Text>
       </HStack>
 
-      <ProviderBlock data={codex} />
-      <ProviderBlock data={minimax} />
+      <ProviderBlock data={codexA} />
+      <ProviderBlock data={codexB} />
     </VStack>
   )
 }
@@ -169,11 +169,13 @@ async function run() {
     const providers = Array.isArray(data?.limits?.providers)
       ? data.limits.providers
       : []
-    const provider = (id: string) => providers.find(
-      (item: any) => item?.provider === id && item?.status === "ok"
+    const accounts = providers.filter(
+      (item: any) => item?.provider === "codex" && item?.status === "ok"
     )
-    const providerData = (id: string, name: string, color: string): ProviderWidgetData => {
-      const item = provider(id)
+    const account = (slot: string, fallbackIndex: number) => accounts.find(
+      (item: any) => String(item?.accountSlot || "").toUpperCase().includes(slot)
+    ) || accounts[fallbackIndex]
+    const providerData = (item: any, name: string, color: string): ProviderWidgetData => {
       const windows = Array.isArray(item?.windows) ? item.windows : []
       const weekly = windows.find((window: any) => window?.kind === "weekly")
       const session = windows.find((window: any) => window?.kind === "session")
@@ -199,8 +201,8 @@ async function run() {
 
     Widget.present(
       <QuotaWidget
-        codex={providerData("codex", "CODEX", "#AFC6FF")}
-        minimax={providerData("minimax", "MINIMAX", "#FF718A")}
+        codexA={providerData(account("A", 0), "CODEX A", "#AFC6FF")}
+        codexB={providerData(account("B", 1), "CODEX B", "#62E6B3")}
       />
     )
   } catch (error) {
