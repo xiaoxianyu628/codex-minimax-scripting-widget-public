@@ -65,10 +65,13 @@ function formatWeeklyCountdown(value: unknown): string {
 }
 
 function meterColor(remaining: number, healthyColor: string): string {
-  return remaining > 50 ? healthyColor : remaining > 20 ? "#FFD166" : "#FF6B7A"
+  if (remaining <= 20) return "#FF6B7A"
+  if (remaining <= 50) return "#FFD166"
+  return healthyColor
 }
 
 function QuotaWindowRow({ data, color }: { data: QuotaWindowData; color: string }) {
+  const quotaColor = meterColor(data.remaining, color)
   return (
     <VStack alignment="leading" spacing={2} frame={{ maxWidth: "infinity" }}>
       <HStack frame={{ maxWidth: "infinity" }}>
@@ -76,7 +79,7 @@ function QuotaWindowRow({ data, color }: { data: QuotaWindowData; color: string 
           {data.label}
         </Text>
         <Spacer />
-        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
+        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle={quotaColor}>
           {data.remaining}%
         </Text>
       </HStack>
@@ -84,7 +87,7 @@ function QuotaWindowRow({ data, color }: { data: QuotaWindowData; color: string 
         value={data.remaining}
         total={100}
         progressViewStyle="linear"
-        tint={meterColor(data.remaining, color)}
+        tint={quotaColor}
       />
     </VStack>
   )

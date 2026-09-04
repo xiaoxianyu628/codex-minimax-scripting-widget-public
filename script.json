@@ -1,7 +1,7 @@
 {
   "name": "AI额度直连版-v7",
   "color": "#5B8DEF",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "description": "两个 Codex Plus 账号的剩余额度组件（公开额度接口，无账号凭据）。",
   "localizedNames": { "zh-Hans": "AI额度直连版-v7" },
   "runInApp": true,
