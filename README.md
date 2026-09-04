@@ -1,19 +1,17 @@
-# AI 额度直连版 v7
+# Codex 双账号额度组件
 
-这是专门修复 Scripting 新版 `Keychain.get` 不存在和打开白屏的桌面组件。
-它不再读取 Keychain，也不需要填访问密钥；手机只会读取经服务器脱敏后的额度百分比。
+这是给 iPhone Scripting 使用的公开直连版小组件。它只读取服务器脱敏后的额度百分比与重置时间，不包含 OpenAI 账号、OAuth Token 或其他凭据。
 
-## 手机端操作
+## 远程导入
 
-1. 下载仓库里的 `AI额度直连版-v7.zip`，用 Scripting 导入。
-2. 确认 Scripting 项目名叫 `AI额度直连版-v7`；旧项目不要覆盖。
-3. 打开新项目，应直接显示小组件预览。
-4. 删掉桌面上旧的 `AI QUOTA` 小组件。
-5. 重新添加 Scripting 小组件，并把脚本选成 `AI额度直连版-v7`。
+使用固定链接：
+
+`https://github.com/xiaoxianyu628/codex-minimax-scripting-widget-public/raw/refs/heads/main/AI额度直连版-v7.zip`
 
 ## 显示内容
 
-- Codex：5 小时和一周剩余额度；周重置倒计时显示为 `X日X时`。
-- MiniMax：5 小时和一周剩余额度；周重置倒计时显示为 `X日X时`。
+- Codex 账号 A：5 小时剩余额度、重置倒计时、周剩余额度
+- Codex 账号 B：5 小时剩余额度、重置倒计时、周剩余额度
+- MiniMax 已从该组件移除
 
-v7 为了稳定性暂时只保留桌面小组件，不启用灵动岛。
+`AI额度直连版-v7.zip` 是手机远程导入使用的正式包；仓库根目录的 `index.tsx` 与 `script.json` 与包内版本保持一致。
