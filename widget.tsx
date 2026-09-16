@@ -8,7 +8,6 @@ type QuotaWindowData = {
 }
 
 type ProviderWidgetData = {
-  name: string
   short: string
   color: string
   session: QuotaWindowData
@@ -33,86 +32,89 @@ function clampPercent(value: unknown): number {
 }
 
 function meterColor(remaining: number, healthyColor: string): string {
-  return remaining > 50 ? healthyColor : remaining > 20 ? "#FFD166" : "#FF6B7A"
+  if (remaining <= 20) return "#FF6B7A"
+  if (remaining <= 50) return "#FFC46B"
+  return healthyColor
 }
 
 function formatMoney(value: unknown, currency: unknown): string {
-  const code = String(currency || "CNY").toUpperCase()
   const number = Number(value)
   if (!Number.isFinite(number)) return "--"
+  const code = String(currency || "CNY").toUpperCase()
   const symbol = code === "CNY" ? "¥" : code === "USD" ? "$" : code === "EUR" ? "€" : ""
   return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
 }
 
-// 5 小时窗口：显示小时与分钟
+// 5 小时窗口重置倒计时
 function formatSessionReset(value: unknown): string {
   if (!value) return "--"
   const resetAt = new Date(String(value)).getTime()
   if (!Number.isFinite(resetAt)) return "--"
   const minutes = Math.ceil((resetAt - Date.now()) / 60000)
-  if (minutes <= 0) return "即将"
-  if (minutes < 60) return `${minutes}m`
+  if (minutes <= 0) return "即将重置"
+  if (minutes < 60) return `${minutes}分`
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
-  return rest > 0 ? `${hours}h${rest}m` : `${hours}h`
+  return rest > 0 ? `${hours}时${rest}分` : `${hours}时`
 }
 
-// 周窗口：显示天数与小时
+// 周窗口重置倒计时
 function formatWeeklyReset(value: unknown): string {
   if (!value) return "--"
   const resetAt = new Date(String(value)).getTime()
   if (!Number.isFinite(resetAt)) return "--"
   const minutes = Math.ceil((resetAt - Date.now()) / 60000)
-  if (minutes <= 0) return "即将"
+  if (minutes <= 0) return "即将重置"
   const totalHours = Math.ceil(minutes / 60)
   const days = Math.floor(totalHours / 24)
   const hours = totalHours % 24
-  if (days <= 0) return `${hours}h`
-  return hours > 0 ? `${days}日${hours}时` : `${days}日`
+  if (days <= 0) return `${hours}时`
+  return hours > 0 ? `${days}天${hours}时` : `${days}天`
 }
 
 function AccountRow({ data }: { data: ProviderWidgetData }) {
   return (
-    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
-      <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
-        {data.short}
-      </Text>
-      <HStack frame={{ maxWidth: "infinity" }}>
-        <ProgressView
-          value={data.session.remaining}
-          total={100}
-          progressViewStyle="linear"
-          tint={meterColor(data.session.remaining, data.color)}
-        />
-      </HStack>
-      <VStack alignment="trailing" spacing={0}>
-        <Text font={10} fontWeight="bold" monospacedDigit foregroundStyle="white">
+    <VStack alignment="leading" spacing={4} frame={{ maxWidth: "infinity" }}>
+      <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
+        <Text font={13} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
+          {data.short}
+        </Text>
+        <HStack frame={{ maxWidth: "infinity" }}>
+          <ProgressView
+            value={data.session.remaining}
+            total={100}
+            progressViewStyle="linear"
+            tint={meterColor(data.session.remaining, data.color)}
+          />
+        </HStack>
+        <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
           {data.session.remaining}%
         </Text>
-        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
-          {data.session.resetText}
-        </Text>
-      </VStack>
-      <VStack alignment="trailing" spacing={0}>
-        <Text font={9} monospacedDigit foregroundStyle="#8995AD">
+        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
           周{data.weekly.remaining}%
         </Text>
-        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
-          {data.weekly.resetText}
+      </HStack>
+      <HStack frame={{ maxWidth: "infinity" }}>
+        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
+          {data.session.resetText}
         </Text>
-      </VStack>
-    </HStack>
+        <Spacer />
+        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
+          {"周 "}{data.weekly.resetText}
+        </Text>
+      </HStack>
+    </VStack>
   )
 }
 
 function DeepSeekRow({ data }: { data: DeepSeekWidgetData }) {
   return (
-    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
-      <Text font={10} fontWeight="bold" foregroundStyle="#FFC46B" kerning={0.5}>
+    <HStack frame={{ maxWidth: "infinity" }}>
+      <Text font={13} fontWeight="bold" foregroundStyle="#FFB454" kerning={0.5}>
         DS
       </Text>
       <Spacer />
-      <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
+      <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
         {data.ok ? data.amount : "--"}
       </Text>
     </HStack>
@@ -123,24 +125,24 @@ function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
   return (
     <VStack
       alignment="leading"
-      spacing={6}
-      padding={12}
+      spacing={11}
+      padding={13}
       frame={{ maxWidth: "infinity", maxHeight: "infinity" }}
       widgetBackground={{
         gradient: [
-          { color: "#18233D", location: 0 },
-          { color: "#0B1020", location: 1 },
+          { color: "#1C1F26", location: 0 },
+          { color: "#0A0C10", location: 1 },
         ],
         startPoint: { x: 0, y: 0 },
         endPoint: { x: 1, y: 1 },
       }}
     >
       <HStack frame={{ maxWidth: "infinity" }}>
-        <Text font={11} fontWeight="semibold" foregroundStyle="#AFC6FF" kerning={1.2}>
+        <Text font={11} fontWeight="semibold" foregroundStyle="#C9D1D9" kerning={1.5}>
           AI QUOTA
         </Text>
         <Spacer />
-        <Text font={9} foregroundStyle="#62E6B3">● LIVE</Text>
+        <Text font={9} foregroundStyle="#3DDC97">● LIVE</Text>
       </HStack>
 
       <AccountRow data={codexA} />
@@ -157,16 +159,16 @@ function ErrorWidget({ message }: { message: string }) {
       spacing={8}
       padding={16}
       frame={{ maxWidth: "infinity", maxHeight: "infinity" }}
-      widgetBackground="#0B1020"
+      widgetBackground="#0A0C10"
     >
-      <Text font={12} fontWeight="semibold" foregroundStyle="#AFC6FF">
+      <Text font={12} fontWeight="semibold" foregroundStyle="#C9D1D9">
         AI QUOTA
       </Text>
       <Spacer />
       <Text font={16} fontWeight="bold" foregroundStyle="white">
         暂无额度数据
       </Text>
-      <Text font={10} foregroundStyle="#8995AD" lineLimit={3}>
+      <Text font={10} foregroundStyle="#6E7681" lineLimit={3}>
         {message}
       </Text>
     </VStack>
@@ -188,14 +190,13 @@ async function run() {
     const account = (slot: string, fallbackIndex: number) => accounts.find((item: any) =>
       String(item?.accountSlot || "").toUpperCase().includes(slot)
     ) || accounts[fallbackIndex]
-    const providerData = (item: any, name: string, short: string, color: string): ProviderWidgetData => {
+    const providerData = (item: any, short: string, color: string): ProviderWidgetData => {
       const windows = Array.isArray(item?.windows) ? item.windows : []
       const weekly = windows.find((window: any) => window?.kind === "weekly")
       const session = windows.find((window: any) => window?.kind === "session")
-      if (!weekly) throw new Error(`服务器尚未同步 ${name} 周额度`)
-      if (!session) throw new Error(`服务器尚未同步 ${name} 5h 额度`)
+      if (!weekly) throw new Error(`服务器尚未同步 ${short} 周额度`)
+      if (!session) throw new Error(`服务器尚未同步 ${short} 5h 额度`)
       return {
-        name,
         short,
         color,
         session: {
@@ -218,8 +219,8 @@ async function run() {
 
     Widget.present(
       <QuotaWidget
-        codexA={providerData(account("A", 0), "CODEX A", "A", "#AFC6FF")}
-        codexB={providerData(account("B", 1), "CODEX B", "B", "#62E6B3")}
+        codexA={providerData(account("A", 0), "A", "#5B9BFF")}
+        codexB={providerData(account("B", 1), "B", "#3DDC97")}
         deepseek={deepseek}
       />
     )
