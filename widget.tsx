@@ -16,7 +16,6 @@ type ProviderWidgetData = {
 
 type DeepSeekWidgetData = {
   amount: string
-  today: string
   ok: boolean
 }
 
@@ -77,11 +76,6 @@ function DeepSeekRow({ data }: { data: DeepSeekWidgetData }) {
         DS
       </Text>
       <Spacer />
-      {data.ok ? (
-        <Text font={9} monospacedDigit foregroundStyle="#8995AD">
-          今日 {data.today}
-        </Text>
-      ) : null}
       <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
         {data.ok ? data.amount : "--"}
       </Text>
@@ -178,7 +172,6 @@ async function run() {
     const deepseek: DeepSeekWidgetData = {
       ok: deepseekEntry?.status === "ok",
       amount: formatMoney(deepseekBalance.amount, deepseekBalance.currency),
-      today: formatMoney(deepseekBalance.todaySpend, deepseekBalance.currency),
     }
 
     Widget.present(
