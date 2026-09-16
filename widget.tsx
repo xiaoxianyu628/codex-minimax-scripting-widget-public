@@ -4,6 +4,7 @@ const HUB = "https://token-monitor-hub.xiaoxianyu628.workers.dev"
 
 type QuotaWindowData = {
   remaining: number
+  resetText: string
 }
 
 type ProviderWidgetData = {
@@ -35,37 +36,73 @@ function meterColor(remaining: number, healthyColor: string): string {
   return remaining > 50 ? healthyColor : remaining > 20 ? "#FFD166" : "#FF6B7A"
 }
 
-const CURRENCY_SYMBOLS: Record<string, string> = { CNY: "¥", USD: "$", EUR: "€" }
-
 function formatMoney(value: unknown, currency: unknown): string {
+  const code = String(currency || "CNY").toUpperCase()
   const number = Number(value)
   if (!Number.isFinite(number)) return "--"
-  const code = String(currency || "CNY").toUpperCase()
-  const symbol = CURRENCY_SYMBOLS[code]
+  const symbol = code === "CNY" ? "¥" : code === "USD" ? "$" : code === "EUR" ? "€" : ""
   return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
+}
+
+// 5 小时窗口：显示小时与分钟
+function formatSessionReset(value: unknown): string {
+  if (!value) return "--"
+  const resetAt = new Date(String(value)).getTime()
+  if (!Number.isFinite(resetAt)) return "--"
+  const minutes = Math.ceil((resetAt - Date.now()) / 60000)
+  if (minutes <= 0) return "即将"
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest > 0 ? `${hours}h${rest}m` : `${hours}h`
+}
+
+// 周窗口：显示天数与小时
+function formatWeeklyReset(value: unknown): string {
+  if (!value) return "--"
+  const resetAt = new Date(String(value)).getTime()
+  if (!Number.isFinite(resetAt)) return "--"
+  const minutes = Math.ceil((resetAt - Date.now()) / 60000)
+  if (minutes <= 0) return "即将"
+  const totalHours = Math.ceil(minutes / 60)
+  const days = Math.floor(totalHours / 24)
+  const hours = totalHours % 24
+  if (days <= 0) return `${hours}h`
+  return hours > 0 ? `${days}日${hours}时` : `${days}日`
 }
 
 function AccountRow({ data }: { data: ProviderWidgetData }) {
   return (
-    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
-      <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
-        {data.short}
-      </Text>
-      <HStack frame={{ maxWidth: "infinity" }}>
-        <ProgressView
-          value={data.session.remaining}
-          total={100}
-          progressViewStyle="linear"
-          tint={meterColor(data.session.remaining, data.color)}
-        />
+    <VStack alignment="leading" spacing={1} frame={{ maxWidth: "infinity" }}>
+      <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
+        <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
+          {data.short}
+        </Text>
+        <HStack frame={{ maxWidth: "infinity" }}>
+          <ProgressView
+            value={data.session.remaining}
+            total={100}
+            progressViewStyle="linear"
+            tint={meterColor(data.session.remaining, data.color)}
+          />
+        </HStack>
+        <Text font={10} fontWeight="bold" monospacedDigit foregroundStyle="white">
+          {data.session.remaining}%
+        </Text>
+        <Text font={9} monospacedDigit foregroundStyle="#8995AD">
+          周{data.weekly.remaining}%
+        </Text>
       </HStack>
-      <Text font={10} fontWeight="bold" monospacedDigit foregroundStyle="white">
-        {data.session.remaining}%
-      </Text>
-      <Text font={9} monospacedDigit foregroundStyle="#8995AD">
-        周{data.weekly.remaining}%
-      </Text>
-    </HStack>
+      <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
+        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
+          5h 剩 {data.session.resetText}
+        </Text>
+        <Spacer />
+        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
+          周 剩 {data.weekly.resetText}
+        </Text>
+      </HStack>
+    </VStack>
   )
 }
 
@@ -87,7 +124,7 @@ function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
   return (
     <VStack
       alignment="leading"
-      spacing={7}
+      spacing={6}
       padding={12}
       frame={{ maxWidth: "infinity", maxHeight: "infinity" }}
       widgetBackground={{
@@ -162,8 +199,14 @@ async function run() {
         name,
         short,
         color,
-        session: { remaining: clampPercent(session.remainingPercent) },
-        weekly: { remaining: clampPercent(weekly.remainingPercent) },
+        session: {
+          remaining: clampPercent(session.remainingPercent),
+          resetText: formatSessionReset(session.resetsAt),
+        },
+        weekly: {
+          remaining: clampPercent(weekly.remainingPercent),
+          resetText: formatWeeklyReset(weekly.resetsAt),
+        },
       }
     }
 
