@@ -73,36 +73,35 @@ function formatWeeklyReset(value: unknown): string {
 
 function AccountRow({ data }: { data: ProviderWidgetData }) {
   return (
-    <VStack alignment="leading" spacing={1} frame={{ maxWidth: "infinity" }}>
-      <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
-        <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
-          {data.short}
-        </Text>
-        <HStack frame={{ maxWidth: "infinity" }}>
-          <ProgressView
-            value={data.session.remaining}
-            total={100}
-            progressViewStyle="linear"
-            tint={meterColor(data.session.remaining, data.color)}
-          />
-        </HStack>
+    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
+      <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
+        {data.short}
+      </Text>
+      <HStack frame={{ maxWidth: "infinity" }}>
+        <ProgressView
+          value={data.session.remaining}
+          total={100}
+          progressViewStyle="linear"
+          tint={meterColor(data.session.remaining, data.color)}
+        />
+      </HStack>
+      <VStack alignment="trailing" spacing={0}>
         <Text font={10} fontWeight="bold" monospacedDigit foregroundStyle="white">
           {data.session.remaining}%
         </Text>
+        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
+          {data.session.resetText}
+        </Text>
+      </VStack>
+      <VStack alignment="trailing" spacing={0}>
         <Text font={9} monospacedDigit foregroundStyle="#8995AD">
           周{data.weekly.remaining}%
         </Text>
-      </HStack>
-      <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
         <Text font={8} monospacedDigit foregroundStyle="#8995AD">
-          5h 剩 {data.session.resetText}
+          {data.weekly.resetText}
         </Text>
-        <Spacer />
-        <Text font={8} monospacedDigit foregroundStyle="#8995AD">
-          周 剩 {data.weekly.resetText}
-        </Text>
-      </HStack>
-    </VStack>
+      </VStack>
+    </HStack>
   )
 }
 
