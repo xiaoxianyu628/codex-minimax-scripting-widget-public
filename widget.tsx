@@ -3,14 +3,12 @@ import { HStack, ProgressView, Spacer, Text, VStack, Widget } from "scripting"
 const HUB = "https://token-monitor-hub.xiaoxianyu628.workers.dev"
 
 type QuotaWindowData = {
-  label: string
   remaining: number
-  used: number
-  resetText: string
 }
 
 type ProviderWidgetData = {
   name: string
+  short: string
   color: string
   session: QuotaWindowData
   weekly: QuotaWindowData
@@ -34,47 +32,8 @@ function clampPercent(value: unknown): number {
   return Math.max(0, Math.min(100, Math.round(number)))
 }
 
-function formatReset(value: unknown): string {
-  if (!value) return "重置未知"
-  const date = new Date(String(value))
-  if (Number.isNaN(date.getTime())) return "重置未知"
-
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const hour = String(date.getHours()).padStart(2, "0")
-  const minute = String(date.getMinutes()).padStart(2, "0")
-  return `${month}/${day} ${hour}:${minute}`
-}
-
-function formatResetCountdown(value: unknown): string {
-  if (!value) return "重置未知"
-  const resetAt = new Date(String(value)).getTime()
-  if (!Number.isFinite(resetAt)) return "重置未知"
-
-  const remainingMinutes = Math.ceil((resetAt - Date.now()) / 60000)
-  if (remainingMinutes <= 0) return "即将重置"
-  if (remainingMinutes < 60) return `${remainingMinutes}m`
-  return `${Math.ceil(remainingMinutes / 60)}h`
-}
-
-function formatWeeklyCountdown(value: unknown): string {
-  if (!value) return "重置未知"
-  const resetAt = new Date(String(value)).getTime()
-  if (!Number.isFinite(resetAt)) return "重置未知"
-
-  const remainingMinutes = Math.ceil((resetAt - Date.now()) / 60000)
-  if (remainingMinutes <= 0) return "即将重置"
-
-  const totalHours = Math.ceil(remainingMinutes / 60)
-  const days = Math.floor(totalHours / 24)
-  const hours = totalHours % 24
-  return `${days}日${hours}时`
-}
-
 function meterColor(remaining: number, healthyColor: string): string {
-  if (remaining <= 20) return "#FF6B7A"
-  if (remaining <= 50) return "#FFD166"
-  return healthyColor
+  return remaining > 50 ? healthyColor : remaining > 20 ? "#FFD166" : "#FF6B7A"
 }
 
 const CURRENCY_SYMBOLS: Record<string, string> = { CNY: "¥", USD: "$", EUR: "€" }
@@ -87,38 +46,46 @@ function formatMoney(value: unknown, currency: unknown): string {
   return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
 }
 
-function QuotaWindowRow({ data, color }: { data: QuotaWindowData; color: string }) {
-  const quotaColor = meterColor(data.remaining, color)
+function AccountRow({ data }: { data: ProviderWidgetData }) {
   return (
-    <VStack alignment="leading" spacing={2} frame={{ maxWidth: "infinity" }}>
+    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
+      <Text font={10} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
+        {data.short}
+      </Text>
       <HStack frame={{ maxWidth: "infinity" }}>
-        <Text font={9} foregroundStyle="#8995AD">
-          {data.label}
-        </Text>
-        <Spacer />
-        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle={quotaColor}>
-          {data.remaining}%
-        </Text>
+        <ProgressView
+          value={data.session.remaining}
+          total={100}
+          progressViewStyle="linear"
+          tint={meterColor(data.session.remaining, data.color)}
+        />
       </HStack>
-      <ProgressView
-        value={data.remaining}
-        total={100}
-        progressViewStyle="linear"
-        tint={quotaColor}
-      />
-    </VStack>
+      <Text font={10} fontWeight="bold" monospacedDigit foregroundStyle="white">
+        {data.session.remaining}%
+      </Text>
+      <Text font={9} monospacedDigit foregroundStyle="#8995AD">
+        周{data.weekly.remaining}%
+      </Text>
+    </HStack>
   )
 }
 
-function ProviderBlock({ data }: { data: ProviderWidgetData }) {
+function DeepSeekRow({ data }: { data: DeepSeekWidgetData }) {
   return (
-    <VStack alignment="leading" spacing={3} frame={{ maxWidth: "infinity" }}>
-      <Text font={10} fontWeight="semibold" foregroundStyle={data.color} kerning={0.5}>
-        {data.name}
+    <HStack spacing={5} frame={{ maxWidth: "infinity" }}>
+      <Text font={10} fontWeight="bold" foregroundStyle="#FFC46B" kerning={0.5}>
+        DS
       </Text>
-      <QuotaWindowRow data={data.session} color={data.color} />
-      <QuotaWindowRow data={data.weekly} color={data.color} />
-    </VStack>
+      <Spacer />
+      {data.ok ? (
+        <Text font={9} monospacedDigit foregroundStyle="#8995AD">
+          今日 {data.today}
+        </Text>
+      ) : null}
+      <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
+        {data.ok ? data.amount : "--"}
+      </Text>
+    </HStack>
   )
 }
 
@@ -126,7 +93,7 @@ function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
   return (
     <VStack
       alignment="leading"
-      spacing={6}
+      spacing={7}
       padding={12}
       frame={{ maxWidth: "infinity", maxHeight: "infinity" }}
       widgetBackground={{
@@ -139,32 +106,16 @@ function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
       }}
     >
       <HStack frame={{ maxWidth: "infinity" }}>
-        <Text
-          font={12}
-          fontWeight="semibold"
-          foregroundStyle="#AFC6FF"
-          kerning={1.2}
-        >
+        <Text font={11} fontWeight="semibold" foregroundStyle="#AFC6FF" kerning={1.2}>
           AI QUOTA
         </Text>
         <Spacer />
-        <Text font={10} foregroundStyle="#62E6B3">● LIVE</Text>
+        <Text font={9} foregroundStyle="#62E6B3">● LIVE</Text>
       </HStack>
 
-      <ProviderBlock data={codexA} />
-      <ProviderBlock data={codexB} />
-      <HStack frame={{ maxWidth: "infinity" }}>
-        <Text font={10} fontWeight="semibold" foregroundStyle="#FFC46B" kerning={0.5}>
-          DEEPSEEK
-        </Text>
-        <Spacer />
-        {deepseek.ok ? (
-          <Text font={9} foregroundStyle="#8995AD">今日 {deepseek.today}</Text>
-        ) : null}
-        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
-          {" "}{deepseek.ok ? deepseek.amount : "--"}
-        </Text>
-      </HStack>
+      <AccountRow data={codexA} />
+      <AccountRow data={codexB} />
+      <DeepSeekRow data={deepseek} />
     </VStack>
   )
 }
@@ -204,10 +155,10 @@ async function run() {
     const accounts = providers.filter(
       (item: any) => item?.provider === "codex" && item?.status === "ok"
     )
-    const account = (slot: string, fallbackIndex: number) => accounts.find(
-      (item: any) => String(item?.accountSlot || "").toUpperCase().includes(slot)
+    const account = (slot: string, fallbackIndex: number) => accounts.find((item: any) =>
+      String(item?.accountSlot || "").toUpperCase().includes(slot)
     ) || accounts[fallbackIndex]
-    const providerData = (item: any, name: string, color: string): ProviderWidgetData => {
+    const providerData = (item: any, name: string, short: string, color: string): ProviderWidgetData => {
       const windows = Array.isArray(item?.windows) ? item.windows : []
       const weekly = windows.find((window: any) => window?.kind === "weekly")
       const session = windows.find((window: any) => window?.kind === "session")
@@ -215,19 +166,10 @@ async function run() {
       if (!session) throw new Error(`服务器尚未同步 ${name} 5h 额度`)
       return {
         name,
+        short,
         color,
-        session: {
-          label: formatResetCountdown(session.resetsAt),
-          remaining: clampPercent(session.remainingPercent),
-          used: clampPercent(session.usedPercent),
-          resetText: formatReset(session.resetsAt),
-        },
-        weekly: {
-          label: formatWeeklyCountdown(weekly.resetsAt),
-          remaining: clampPercent(weekly.remainingPercent),
-          used: clampPercent(weekly.usedPercent),
-          resetText: formatReset(weekly.resetsAt),
-        },
+        session: { remaining: clampPercent(session.remainingPercent) },
+        weekly: { remaining: clampPercent(weekly.remainingPercent) },
       }
     }
 
@@ -241,8 +183,8 @@ async function run() {
 
     Widget.present(
       <QuotaWidget
-        codexA={providerData(account("A", 0), "CODEX A", "#AFC6FF")}
-        codexB={providerData(account("B", 1), "CODEX B", "#62E6B3")}
+        codexA={providerData(account("A", 0), "CODEX A", "A", "#AFC6FF")}
+        codexB={providerData(account("B", 1), "CODEX B", "B", "#62E6B3")}
         deepseek={deepseek}
       />
     )
