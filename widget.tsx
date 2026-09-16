@@ -16,9 +16,16 @@ type ProviderWidgetData = {
   weekly: QuotaWindowData
 }
 
+type DeepSeekWidgetData = {
+  amount: string
+  today: string
+  ok: boolean
+}
+
 type WidgetData = {
   codexA: ProviderWidgetData
   codexB: ProviderWidgetData
+  deepseek: DeepSeekWidgetData
 }
 
 function clampPercent(value: unknown): number {
@@ -70,6 +77,16 @@ function meterColor(remaining: number, healthyColor: string): string {
   return healthyColor
 }
 
+const CURRENCY_SYMBOLS: Record<string, string> = { CNY: "¥", USD: "$", EUR: "€" }
+
+function formatMoney(value: unknown, currency: unknown): string {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return "--"
+  const code = String(currency || "CNY").toUpperCase()
+  const symbol = CURRENCY_SYMBOLS[code]
+  return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
+}
+
 function QuotaWindowRow({ data, color }: { data: QuotaWindowData; color: string }) {
   const quotaColor = meterColor(data.remaining, color)
   return (
@@ -105,7 +122,7 @@ function ProviderBlock({ data }: { data: ProviderWidgetData }) {
   )
 }
 
-function QuotaWidget({ codexA, codexB }: WidgetData) {
+function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
   return (
     <VStack
       alignment="leading"
@@ -136,6 +153,18 @@ function QuotaWidget({ codexA, codexB }: WidgetData) {
 
       <ProviderBlock data={codexA} />
       <ProviderBlock data={codexB} />
+      <HStack frame={{ maxWidth: "infinity" }}>
+        <Text font={10} fontWeight="semibold" foregroundStyle="#FFC46B" kerning={0.5}>
+          DEEPSEEK
+        </Text>
+        <Spacer />
+        {deepseek.ok ? (
+          <Text font={9} foregroundStyle="#8995AD">今日 {deepseek.today}</Text>
+        ) : null}
+        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
+          {" "}{deepseek.ok ? deepseek.amount : "--"}
+        </Text>
+      </HStack>
     </VStack>
   )
 }
@@ -202,10 +231,19 @@ async function run() {
       }
     }
 
+    const deepseekEntry = providers.find((item: any) => item?.provider === "deepseek")
+    const deepseekBalance = deepseekEntry?.balance || {}
+    const deepseek: DeepSeekWidgetData = {
+      ok: deepseekEntry?.status === "ok",
+      amount: formatMoney(deepseekBalance.amount, deepseekBalance.currency),
+      today: formatMoney(deepseekBalance.todaySpend, deepseekBalance.currency),
+    }
+
     Widget.present(
       <QuotaWidget
         codexA={providerData(account("A", 0), "CODEX A", "#AFC6FF")}
         codexB={providerData(account("B", 1), "CODEX B", "#62E6B3")}
+        deepseek={deepseek}
       />
     )
   } catch (error) {
