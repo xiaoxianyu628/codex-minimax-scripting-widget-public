@@ -14,15 +14,15 @@ type ProviderWidgetData = {
   weekly: QuotaWindowData
 }
 
-type NecoWidgetData = {
-  status: string
+type DeepSeekWidgetData = {
+  amount: string
   ok: boolean
 }
 
 type WidgetData = {
   codexA: ProviderWidgetData
   codexB: ProviderWidgetData
-  neco: NecoWidgetData
+  deepseek: DeepSeekWidgetData
 }
 
 function clampPercent(value: unknown): number {
@@ -35,6 +35,14 @@ function meterColor(remaining: number, healthyColor: string): string {
   if (remaining <= 20) return "#FF6B7A"
   if (remaining <= 50) return "#FFC46B"
   return healthyColor
+}
+
+function formatMoney(value: unknown, currency: unknown): string {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return "--"
+  const code = String(currency || "CNY").toUpperCase()
+  const symbol = code === "CNY" ? "¥" : code === "USD" ? "$" : code === "EUR" ? "€" : ""
+  return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
 }
 
 // 5 小时窗口重置倒计时
@@ -99,21 +107,21 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
   )
 }
 
-function NecoRow({ data }: { data: NecoWidgetData }) {
+function DeepSeekRow({ data }: { data: DeepSeekWidgetData }) {
   return (
     <HStack frame={{ maxWidth: "infinity" }}>
       <Text font={13} fontWeight="bold" foregroundStyle="#FFB454" kerning={0.5}>
-        NECO
+        DS
       </Text>
       <Spacer />
       <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
-        {data.ok ? data.status : "--"}
+        {data.ok ? data.amount : "--"}
       </Text>
     </HStack>
   )
 }
 
-function QuotaWidget({ codexA, codexB, neco }: WidgetData) {
+function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
   return (
     <VStack
       alignment="leading"
@@ -139,7 +147,7 @@ function QuotaWidget({ codexA, codexB, neco }: WidgetData) {
 
       <AccountRow data={codexA} />
       <AccountRow data={codexB} />
-      <NecoRow data={neco} />
+      <DeepSeekRow data={deepseek} />
     </VStack>
   )
 }
@@ -202,18 +210,18 @@ async function run() {
       }
     }
 
-    const neco: NecoWidgetData = {
-      // necodex uses the same Codex account pool; the public API has no
-      // separate necodex balance to display.
-      ok: accounts.length > 0,
-      status: accounts.length > 0 ? "A/B READY" : "--",
+    const deepseekEntry = providers.find((item: any) => item?.provider === "deepseek")
+    const deepseekBalance = deepseekEntry?.balance || {}
+    const deepseek: DeepSeekWidgetData = {
+      ok: deepseekEntry?.status === "ok",
+      amount: formatMoney(deepseekBalance.amount, deepseekBalance.currency),
     }
 
     Widget.present(
       <QuotaWidget
         codexA={providerData(account("A", 0), "A", "#5B9BFF")}
         codexB={providerData(account("B", 1), "B", "#3DDC97")}
-        neco={neco}
+        deepseek={deepseek}
       />
     )
   } catch (error) {
