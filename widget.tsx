@@ -119,7 +119,7 @@ function OpencodeRow({ data }: { data: OpencodeWidgetData }) {
       </HStack>
       <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {"5h "}{data.session.resetText}
+          {data.session.resetText}
         </Text>
         <Spacer />
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
