@@ -119,9 +119,12 @@ function OpencodeRow({ data }: { data: OpencodeWidgetData }) {
       </HStack>
       <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {"周 "}{data.ok ? data.weekly.remaining : "--"}%{" · "}{data.weekly.resetText}
+          {"5h "}{data.session.resetText}
         </Text>
         <Spacer />
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {"周 "}{data.ok ? data.weekly.remaining : "--"}%{" · "}{data.weekly.resetText}
+        </Text>
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
           {"月 "}{data.ok ? data.monthly.remaining : "--"}%{" · "}{data.monthly.resetText}
         </Text>
