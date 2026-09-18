@@ -68,9 +68,9 @@ function formatWeeklyReset(value: unknown): string {
 
 function AccountRow({ data }: { data: ProviderWidgetData }) {
   return (
-    <VStack alignment="leading" spacing={4} frame={{ maxWidth: "infinity" }}>
-      <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
-        <Text font={13} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
+    <VStack alignment="leading" spacing={3} frame={{ maxWidth: "infinity" }}>
+      <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
+        <Text font={11} fontWeight="bold" foregroundStyle={data.color} kerning={0.5}>
           {data.short}
         </Text>
         <HStack frame={{ maxWidth: "infinity" }}>
@@ -81,20 +81,17 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
             tint={meterColor(data.session.remaining, data.color)}
           />
         </HStack>
-        <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
+        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
           {data.session.remaining}%
-        </Text>
-        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
-          周{data.weekly.remaining}%
         </Text>
       </HStack>
       <HStack frame={{ maxWidth: "infinity" }}>
-        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
-          {data.session.resetText}
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {"周 "}{data.weekly.remaining}%
         </Text>
         <Spacer />
-        <Text font={10} monospacedDigit foregroundStyle="#6E7681">
-          {"周 "}{data.weekly.resetText}
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {data.session.resetText}{" · 周 "}{data.weekly.resetText}
         </Text>
       </HStack>
     </VStack>
@@ -103,29 +100,33 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
 
 function OpencodeRow({ data }: { data: OpencodeWidgetData }) {
   return (
-    <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
-      <Text font={13} fontWeight="bold" foregroundStyle="#C47BFF" kerning={0.5}>
-        OG
-      </Text>
-      <Spacer />
-      {data.ok ? (
-        <>
-          <Text font={10} monospacedDigit foregroundStyle="#6E7681">
-            5h {data.session.remaining}%
-          </Text>
-          <Text font={10} monospacedDigit foregroundStyle="#6E7681">
-            周 {data.weekly.remaining}%
-          </Text>
-          <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
-            月 {data.monthly.remaining}%
-          </Text>
-        </>
-      ) : (
-        <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
-          --
+    <VStack alignment="leading" spacing={3} frame={{ maxWidth: "infinity" }}>
+      <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
+        <Text font={11} fontWeight="bold" foregroundStyle="#C47BFF" kerning={0.5}>
+          OG
         </Text>
-      )}
-    </HStack>
+        <HStack frame={{ maxWidth: "infinity" }}>
+          <ProgressView
+            value={data.session.remaining}
+            total={100}
+            progressViewStyle="linear"
+            tint={meterColor(data.session.remaining, "#C47BFF")}
+          />
+        </HStack>
+        <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
+          {data.ok ? `${data.session.remaining}%` : "--"}
+        </Text>
+      </HStack>
+      <HStack frame={{ maxWidth: "infinity" }}>
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {"周 "}{data.ok ? data.weekly.remaining : "--"}%
+        </Text>
+        <Spacer />
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {"月 "}{data.ok ? data.monthly.remaining : "--"}%
+        </Text>
+      </HStack>
+    </VStack>
   )
 }
 
@@ -133,8 +134,8 @@ function QuotaWidget({ codexA, codexB, opencode }: WidgetData) {
   return (
     <VStack
       alignment="leading"
-      spacing={11}
-      padding={13}
+      spacing={7}
+      padding={12}
       frame={{ maxWidth: "infinity", maxHeight: "infinity" }}
       widgetBackground={{
         gradient: [
