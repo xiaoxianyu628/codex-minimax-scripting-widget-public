@@ -14,15 +14,17 @@ type ProviderWidgetData = {
   weekly: QuotaWindowData
 }
 
-type DeepSeekWidgetData = {
-  amount: string
+type OpencodeWidgetData = {
   ok: boolean
+  session: QuotaWindowData
+  weekly: QuotaWindowData
+  monthly: QuotaWindowData
 }
 
 type WidgetData = {
   codexA: ProviderWidgetData
   codexB: ProviderWidgetData
-  deepseek: DeepSeekWidgetData
+  opencode: OpencodeWidgetData
 }
 
 function clampPercent(value: unknown): number {
@@ -35,14 +37,6 @@ function meterColor(remaining: number, healthyColor: string): string {
   if (remaining <= 20) return "#FF6B7A"
   if (remaining <= 50) return "#FFC46B"
   return healthyColor
-}
-
-function formatMoney(value: unknown, currency: unknown): string {
-  const number = Number(value)
-  if (!Number.isFinite(number)) return "--"
-  const code = String(currency || "CNY").toUpperCase()
-  const symbol = code === "CNY" ? "¥" : code === "USD" ? "$" : code === "EUR" ? "€" : ""
-  return symbol ? `${symbol}${number.toFixed(2)}` : `${number.toFixed(2)} ${code}`
 }
 
 // 5 小时窗口重置倒计时
@@ -107,21 +101,35 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
   )
 }
 
-function DeepSeekRow({ data }: { data: DeepSeekWidgetData }) {
+function OpencodeRow({ data }: { data: OpencodeWidgetData }) {
   return (
-    <HStack frame={{ maxWidth: "infinity" }}>
-      <Text font={13} fontWeight="bold" foregroundStyle="#FFB454" kerning={0.5}>
-        DS
+    <HStack spacing={8} frame={{ maxWidth: "infinity" }}>
+      <Text font={13} fontWeight="bold" foregroundStyle="#C47BFF" kerning={0.5}>
+        OG
       </Text>
       <Spacer />
-      <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
-        {data.ok ? data.amount : "--"}
-      </Text>
+      {data.ok ? (
+        <>
+          <Text font={10} monospacedDigit foregroundStyle="#6E7681">
+            5h {data.session.remaining}%
+          </Text>
+          <Text font={10} monospacedDigit foregroundStyle="#6E7681">
+            周 {data.weekly.remaining}%
+          </Text>
+          <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
+            月 {data.monthly.remaining}%
+          </Text>
+        </>
+      ) : (
+        <Text font={13} fontWeight="bold" monospacedDigit foregroundStyle="white">
+          --
+        </Text>
+      )}
     </HStack>
   )
 }
 
-function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
+function QuotaWidget({ codexA, codexB, opencode }: WidgetData) {
   return (
     <VStack
       alignment="leading"
@@ -147,7 +155,7 @@ function QuotaWidget({ codexA, codexB, deepseek }: WidgetData) {
 
       <AccountRow data={codexA} />
       <AccountRow data={codexB} />
-      <DeepSeekRow data={deepseek} />
+      <OpencodeRow data={opencode} />
     </VStack>
   )
 }
@@ -210,18 +218,28 @@ async function run() {
       }
     }
 
-    const deepseekEntry = providers.find((item: any) => item?.provider === "deepseek")
-    const deepseekBalance = deepseekEntry?.balance || {}
-    const deepseek: DeepSeekWidgetData = {
-      ok: deepseekEntry?.status === "ok",
-      amount: formatMoney(deepseekBalance.amount, deepseekBalance.currency),
+    const opencodeEntry = providers.find((item: any) => item?.provider === "opencode")
+    const opencodeWindows = Array.isArray(opencodeEntry?.windows)
+      ? opencodeEntry.windows
+      : []
+    const ocPick = (kind: string) => opencodeWindows.find((window: any) => window?.kind === kind)
+    // 月窗口在上游为 monthly，共享 schema 归一化为 billing，两者都接受。
+    const ocMonthly = ocPick("monthly") || ocPick("billing")
+    const ocSession = ocPick("session")
+    const ocWeekly = ocPick("weekly")
+    const opencodeOk = Boolean(opencodeEntry && ocSession && ocWeekly && ocMonthly)
+    const opencode: OpencodeWidgetData = {
+      ok: opencodeOk,
+      session: { remaining: clampPercent(ocSession?.remainingPercent), resetText: "--" },
+      weekly: { remaining: clampPercent(ocWeekly?.remainingPercent), resetText: "--" },
+      monthly: { remaining: clampPercent(ocMonthly?.remainingPercent), resetText: "--" },
     }
 
     Widget.present(
       <QuotaWidget
         codexA={providerData(account("A", 0), "A", "#5B9BFF")}
         codexB={providerData(account("B", 1), "B", "#3DDC97")}
-        deepseek={deepseek}
+        opencode={opencode}
       />
     )
   } catch (error) {
