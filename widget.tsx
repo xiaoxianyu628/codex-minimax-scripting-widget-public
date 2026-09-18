@@ -82,7 +82,10 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
           />
         </HStack>
         <Text font={11} fontWeight="bold" monospacedDigit foregroundStyle="white">
-          {data.session.remaining}%
+          {"5h "}{data.session.remaining}%
+        </Text>
+        <Text font={9} monospacedDigit foregroundStyle="#6E7681">
+          {data.session.resetText}
         </Text>
       </HStack>
       <HStack frame={{ maxWidth: "infinity" }}>
@@ -91,7 +94,7 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
         </Text>
         <Spacer />
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {data.session.resetText}{" · 周 "}{data.weekly.resetText}
+          {data.weekly.resetText}
         </Text>
       </HStack>
     </VStack>
