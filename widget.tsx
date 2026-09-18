@@ -87,7 +87,7 @@ function AccountRow({ data }: { data: ProviderWidgetData }) {
       </HStack>
       <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {"5h "}{data.session.resetText}
+          {data.session.resetText}
         </Text>
         <Spacer />
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
@@ -117,13 +117,13 @@ function OpencodeRow({ data }: { data: OpencodeWidgetData }) {
           {data.ok ? `${data.session.remaining}%` : "--"}
         </Text>
       </HStack>
-      <HStack frame={{ maxWidth: "infinity" }}>
+      <HStack spacing={6} frame={{ maxWidth: "infinity" }}>
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {"周 "}{data.ok ? data.weekly.remaining : "--"}%
+          {"周 "}{data.ok ? data.weekly.remaining : "--"}%{" · "}{data.weekly.resetText}
         </Text>
         <Spacer />
         <Text font={9} monospacedDigit foregroundStyle="#6E7681">
-          {"月 "}{data.ok ? data.monthly.remaining : "--"}%
+          {"月 "}{data.ok ? data.monthly.remaining : "--"}%{" · "}{data.monthly.resetText}
         </Text>
       </HStack>
     </VStack>
@@ -231,9 +231,18 @@ async function run() {
     const opencodeOk = Boolean(opencodeEntry && ocSession && ocWeekly && ocMonthly)
     const opencode: OpencodeWidgetData = {
       ok: opencodeOk,
-      session: { remaining: clampPercent(ocSession?.remainingPercent), resetText: "--" },
-      weekly: { remaining: clampPercent(ocWeekly?.remainingPercent), resetText: "--" },
-      monthly: { remaining: clampPercent(ocMonthly?.remainingPercent), resetText: "--" },
+      session: {
+        remaining: clampPercent(ocSession?.remainingPercent),
+        resetText: formatSessionReset(ocSession?.resetsAt),
+      },
+      weekly: {
+        remaining: clampPercent(ocWeekly?.remainingPercent),
+        resetText: formatWeeklyReset(ocWeekly?.resetsAt),
+      },
+      monthly: {
+        remaining: clampPercent(ocMonthly?.remainingPercent),
+        resetText: formatWeeklyReset(ocMonthly?.resetsAt),
+      },
     }
 
     Widget.present(
